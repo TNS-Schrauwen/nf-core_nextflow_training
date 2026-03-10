@@ -23,4 +23,4 @@ global open-source community. Happy Nextflow-ing! 🚀🎉
    git clone https://github.com/TNS-Schrauwen/nf-core_nextflow_training.git
 ```
 
-2. Open the `index.html` file in your browser by double-clicking it.
+2. Open the `training.html` file in your browser by double-clicking it.
