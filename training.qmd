@@ -1,0 +1,798 @@
+---
+title: "A Guide to Nextflow & nf-core"
+date: today
+format:
+  revealjs:
+    theme: night
+    code-line-numbers: true
+    highlight-style: monokai
+    transition: slide
+    slide-number: true
+    scrollable: true
+    controls: true
+    chalkboard: true
+    preview-links: auto
+    footer: "nf-core Hackathon 2026"
+    logo: "https://nf-co.re/logo/nf-core-logo.svg"
+    smaller: true
+    title-slide-attributes:
+      data-background-color: "#212529"
+    include-in-header:
+      text: |
+        <link href="https://fonts.googleapis.com/css2?family=Maven+Pro:wght@700&family=Inter&display=swap" rel="stylesheet">
+        <style>
+          .reveal, .reveal-viewport { background-color: #495057 !important; }
+          .reveal h1 { color: #24B064 !important; font-family: 'Maven Pro', sans-serif !important; font-size: 2.7em !important; }
+          .reveal h2 { color: #24B064 !important; font-family: 'Maven Pro', sans-serif !important; font-size: 2.1em !important; }
+          .reveal h3 { color: #24B064 !important; font-family: 'Maven Pro', sans-serif !important; font-size: 1.9em !important; }
+          .reveal p, .reveal li { color: #f8f9fa !important; font-family: 'Inter', sans-serif !important; }
+          .reveal a { color: #24B064 !important; }
+          .reveal .footer { color: #adb5bd !important; }
+          .reveal .slide-number { color: #adb5bd !important; }
+        </style>
+execute:
+  echo: false
+  eval: true
+---
+
+## Congratulations! You Have 500 FASTQ Files 🎉
+
+You just got **500 FASTQ files** from the sequencing run.
+
+::: fragment
+For each sample, you need to:
+
+1.  Run quality control
+2.  Trim adapters
+3.  Align reads to a reference genome
+4.  Call variants
+5.  Generate a final report
+:::
+
+::: fragment
+❓Are you going to write a **bash loop** and hope nothing crashes halfway through?
+:::
+
+------------------------------------------------------------------------
+
+## The Bash script worked .. until it didn't
+
+``` bash
+# The "it works on my machine" pipeline
+for sample in data/*.fastq.gz; do
+    fastqc $sample
+    trimmomatic $sample ...
+    bwa mem ref.fa $sample | samtools sort > ${sample}.bam
+    # What if this fails at sample 247?
+    # What about parallelization?
+    # What about running this on a cluster?
+done
+```
+
+::: {.fragment .fade-up}
+🔴 No fault tolerance\
+🔴 No parallelization\
+🔴 Not reproducible\
+🔴 Not portable
+:::
+
+------------------------------------------------------------------------
+
+## There has to be a better way ..
+
+::: incremental
+-   **Automates** orchestration of tasks and data dependencies
+-   **Handles** compute resources across HPC, cloud, and local environments
+-   **Recovers** from failures without restarting everything
+-   **Scales** from laptop → cluster → cloud seamlessly
+:::
+
+------------------------------------------------------------------------
+
+## A Workflow Manager solves All of this ..
+
+| Feature               | Why It Matters                        |
+|-----------------------|---------------------------------------|
+| 🛡️ Fault-tolerant     | Recovers from failures automatically  |
+| ⚡ Parallelizable     | Runs independent tasks simultaneously |
+| 🔁 Reproducible       | Same input → same output, every time  |
+| 🌍 Portable           | Runs on laptop, HPC cluster, or cloud |
+
+------------------------------------------------------------------------
+
+## Meet Nextflow {background-color="#6c757d"}
+
+A workflow manager **built for bioinformatics**!
+
+![](https://raw.githubusercontent.com/nextflow-io/trademark/master/nextflow-logo-bg-light.png)
+
+::: incremental
+-   Describes your pipeline as a series of connected steps
+-   Built-in support for containers (Docker, Singularity)
+-   Runs on local, HPC & Cloud
+-   Backed by a dedicated bioinformatics community (nf-core)
+:::
+
+------------------------------------------------------------------------
+
+## Nextflow vs The Rest
+
+| Tool          | Strengths                   | Best For                  |
+|---------------|-----------------------------|---------------------------|
+| Nextflow  | Dataflow, containers, cloud | Bioinformatics pipelines  |
+| Snakemake | Python-based, file-driven   | Python-centric teams      |
+| WDL/CWL   | Specification specifications     | Platform interoperability |
+| Airflow   | General-purpose, scheduling | Data engineering          |
+
+
+------------------------------------------------------------------------
+
+## Let's dive into Nextflow
+
+> 📚 Follow along: [training.nextflow.io/latest/hello_nextflow/](https://training.nextflow.io/latest/hello_nextflow/)
+
+------------------------------------------------------------------------
+
+## Setting up your workspace
+
+> 🔗 [training.nextflow.io/latest/hello_nextflow/00_orientation/](https://training.nextflow.io/latest/hello_nextflow/00_orientation/)
+
+### GitHub Codespaces ☁️
+
+-   Just a browser + GitHub account
+-   Pre-configured environment
+-   ✅ **Recommended for beginners**
+
+### Local Setup 💻
+
+-   Nextflow installed
+-   Docker installed
+-   Code editor (VS Code)
+
+
+------------------------------------------------------------------------
+
+## Let's make sure everything is ready 🖥
+
+``` bash
+# Check Nextflow is installed
+nextflow -version
+
+# Check Docker is installed
+docker --version
+```
+
+``` bash
+# Explore the directory
+ls -lathr
+```
+
+::: callout-tip
+## Follow Along!
+
+Your Codespace is already set up - just open the terminal and run these commands.
+:::
+
+------------------------------------------------------------------------
+
+## Part 1: Hello World - Let's walkthrough the Starter Script {.scrollable}
+
+The `hello-world.nf` script is already in your Codespace current directory.
+``` {.groovy filename="hello-world.nf" code-line-numbers="|3-6|8-14|17-21"}
+#!/usr/bin/env nextflow
+
+/*
+ * Use echo to print 'Hello World!' to a file
+ */
+process sayHello {
+
+    output:
+    path 'output.txt'
+
+    script:
+    """
+    echo 'Hello World!' > output.txt
+    """
+}
+
+workflow {
+
+    main:
+    // emit a greeting
+    sayHello()
+}
+```
+
+::: fragment
+💡 Two key blocks — `process` defines **what to run**, `workflow` defines **when to run it**.
+:::
+
+------------------------------------------------------------------------
+
+## Running Your First Workflow 🚀
+``` bash
+nextflow run hello-world.nf
+```
+
+::: fragment
+``` bash
+N E X T F L O W  ~  version 25.10.2
+
+Launching `hello-world.nf` [goofy_torvalds] DSL2 - revision: c33d41f479
+
+executor >  local (1)
+[65/7be2fa] sayHello | 1 of 1 ✔
+```
+:::
+
+::: fragment
+💡 `[65/7be2fa]` is the path to the output in `work/` — every run gets its own unique directory!
+:::
+
+------------------------------------------------------------------------
+
+## What's Inside `work/`? 📂
+``` bash
+work
+└── 65
+    └── 7be2fad5e71e5f49998f795677fd68
+        ├── .command.sh    # ← the exact command that ran
+        ├── .command.log   # ← full log output
+        ├── .command.err   # ← any error messages
+        ├── .exitcode      # ← 0 = success
+        └── output.txt     # ← your result!
+```
+
+::: fragment
+``` bash
+# View hidden log files
+tree -a work
+```
+:::
+
+::: fragment
+💡 `.command.sh` is your best friend when debugging — it shows exactly what Nextflow ran!
+:::
+
+------------------------------------------------------------------------
+
+## Publishing Your Results 📁 {.scrollable}
+
+Outputs are buried in `work/` by default — use the `output` block to save them somewhere accessible.
+``` {.groovy filename="hello-world.nf" code-line-numbers="|5-6|9-14"}
+workflow {
+
+    main:
+    sayHello()
+
+    publish:
+    first_output = sayHello.out    // ← assign a name to the output
+}
+
+output {
+    first_output {
+        path 'hello_world'         // ← save to results/hello_world/
+        mode 'copy'                // ← copy instead of symlink
+    }
+}
+```
+
+::: fragment
+💡 Default mode creates **symlinks** — if you delete `work/`, you lose the file. Use `mode 'copy'` to be safe!
+:::
+
+::: callout-warning
+## Heads up — older pipelines use `publishDir`
+``` groovy
+process sayHello {
+    publishDir 'results/hello_world', mode: 'copy'
+    ...
+}
+```
+You'll still see this pattern — but it will be **disallowed** in future Nextflow versions.
+:::
+
+------------------------------------------------------------------------
+
+## Variable Input via Command Line {.scrollable}
+
+Three changes needed — add an `input` block, update the script, and set up `params`.
+``` {.groovy filename="hello-world.nf" code-line-numbers="|2-3|7|11-13"}
+process sayHello {
+
+    input:
+    val greeting                       // ← Step 1: accept a variable
+
+    output:
+    path 'output.txt'
+
+    script:
+    """
+    echo '${greeting}' > output.txt    // ← Step 2: use the variable
+    """
+}
+
+/*
+ * Pipeline parameters
+ */
+params {
+    input: String = 'Holà mundo!'      // ← Step 3: set a default value
+}
+
+workflow {
+    main:
+    sayHello(params.input)             // ← pass it to the process
+}
+```
+
+::: fragment
+``` bash
+# Uses default value
+nextflow run hello-world.nf
+
+# Override from command line
+nextflow run hello-world.nf --input 'Bonjour le monde!'
+```
+:::
+
+::: fragment
+💡 `--input` = pipeline parameter &nbsp;&nbsp;|&nbsp;&nbsp; `-resume` = Nextflow setting — note the difference in hyphens!
+:::
+
+------------------------------------------------------------------------
+
+## Two Concepts. That's All you need.
+
+```{mermaid}
+%%{init: {'theme': 'base', 'themeVariables': {'edgeLabelBackground': '#6c757d', 'tertiaryTextColor': '#f8f9fa'}}}%%
+graph LR
+    A[Channel] -->|data| B[Process]
+    B -->|data| C[Channel]
+    C -->|data| D[Process]
+    D -->|data| E[Channel]
+    
+    style A fill:#24B064,color:#f8f9fa
+    style C fill:#24B064,color:#f8f9fa
+    style E fill:#24B064,color:#f8f9fa
+    style B fill:#212529,color:#f8f9fa
+    style D fill:#212529,color:#f8f9fa
+```
+
+::::: columns
+::: {.column width="50%"}
+### ⚙️ Process
+
+-   A single step in your pipeline
+-   Wraps a script (Bash, Python, R, etc.)
+-   Defines inputs and outputs
+:::
+
+::: {.column width="50%"}
+### 🔀 Channel
+
+-   The pipe that connects your processes
+-   Passes data between steps automatically
+-   Drives the dataflow model
+:::
+:::::
+
+------------------------------------------------------------------------
+
+## The Superpower You Needed: `-resume` 🔄
+``` bash
+# First run — everything executes
+nextflow run hello-world.nf
+
+# Make a change, then rerun
+nextflow run hello-world.nf -resume
+```
+
+::: fragment
+``` bash
+[skipped] sayHello | 1 of 1, cached ✅
+```
+:::
+
+::: fragment
+💡 Nextflow **hashes** inputs — if nothing changed, it skips the task!
+:::
+
+------------------------------------------------------------------------
+
+## 🖥️ Your Turn: Run Hello World! 
+
+``` bash
+# Run the workflow
+nextflow run hello-world.nf
+```
+
+::: callout-note
+## Observe the output
+
+-   What does the console show?
+-   Where is `output.txt`?
+-   What's in the `work/` directory?
+:::
+
+::: callout-tip
+## Now try this
+
+1.  Run with a custom greeting: `--input 'Bonjour!'`
+2.  Make a change and rerun with `-resume`
+3.  Check `results/hello_world/output.txt`
+
+👉 [training.nextflow.io/latest/hello_nextflow/01_hello_world](https://training.nextflow.io/latest/hello_nextflow/01_hello_world/)
+:::
+
+------------------------------------------------------------------------
+
+## Part 2: Hello Channels - How Data flows through Channels
+
+Channels are how data **flows between processes** in Nextflow.
+``` groovy
+// Instead of one greeting — feed multiple!
+Channel.of('Hello', 'Bonjour', 'Hola')
+```
+
+::: fragment
+💡 Each item in the channel runs the process **independently and in parallel**
+:::
+
+::: callout-tip
+## 👉 Follow Along
+[training.nextflow.io/latest/hello_nextflow/02_hello_channels](https://training.nextflow.io/latest/hello_nextflow/02_hello_channels/)
+:::
+
+------------------------------------------------------------------------
+
+## Part 3: Hello Workflow
+
+Connect multiple processes — output of one becomes input of the next.
+``` groovy
+workflow {
+    sayHello(Channel.of('Hello', 'Bonjour', 'Hola'))
+    convertToUpper(sayHello.out)
+}
+```
+
+::: fragment
+💡 This is where Nextflow's **dataflow parallelism** really shines
+:::
+
+::: callout-tip
+## 👉 Follow Along
+[training.nextflow.io/latest/hello_nextflow/03_hello_workflow](https://training.nextflow.io/latest/hello_nextflow/03_hello_workflow/)
+:::
+
+------------------------------------------------------------------------
+
+## Part 4: Hello Modules 📦 
+
+Modules let you **reuse processes** across pipelines — no copy-pasting.
+``` groovy
+// Import a process from a separate file
+include { SAYHELLO } from './modules/sayhello.nf'
+```
+
+::: fragment
+💡 This is the foundation of how **nf-core** shares tools across the community
+:::
+
+::: callout-tip
+## 👉 Follow Along
+[training.nextflow.io/latest/hello_nextflow/04_hello_modules](https://training.nextflow.io/latest/hello_nextflow/04_hello_modules/)
+:::
+
+------------------------------------------------------------------------
+
+## Part 5: Hello Containers
+
+Each process can run in its **own container** — no more dependency conflicts.
+``` groovy
+process sayHello {
+    container 'ubuntu:24.04'
+    ...
+}
+```
+
+::: fragment
+💡 Same pipeline, same results — on any machine, any cluster, any cloud
+:::
+
+::: callout-tip
+## 👉 Follow Along
+[training.nextflow.io/latest/hello_nextflow/05_hello_containers](https://training.nextflow.io/latest/hello_nextflow/05_hello_containers/)
+:::
+
+------------------------------------------------------------------------
+
+## Part 6: Hello Config
+
+`nextflow.config` controls how your pipeline runs — without touching the code.
+``` groovy
+profiles {
+    docker { docker.enabled = true }
+    slurm  { process.executor = 'slurm' }
+}
+```
+
+::: fragment
+💡 Switch from laptop → HPC → cloud by just changing the **profile**
+:::
+
+::: callout-tip
+## 👉 Follow Along
+[training.nextflow.io/latest/hello_nextflow/06_hello_config](https://training.nextflow.io/latest/hello_nextflow/06_hello_config/)
+:::
+
+------------------------------------------------------------------------
+
+## Welcome to nf-core {.center background-color="#212529"}
+
+> From writing Nextflow → joining a global community
+
+------------------------------------------------------------------------
+
+## What is nf-core? {background-color="#212529"}
+
+:::::: columns
+:::: {.column width="60%"}
+::: incremental
+-   🏠 A **community** of pipeline developers
+-   📦 **90+ curated pipelines** (RNA-seq, ATAC-seq, sarek...)
+-   🧱 **1200+ reusable modules**
+-   🛠️ **CLI tools** for building & testing
+-   📋 **Standards** for quality and reproducibility
+:::
+::::
+
+::: {.column width="40%"}
+![](https://raw.githubusercontent.com/nf-core/logos/master/nf-core-logos/nf-core-logo-darkbg.svg){fig-align="center" width="80%"}
+:::
+::::::
+
+------------------------------------------------------------------------
+
+## How to run an nf-core pipeline
+
+All nf-core pipelines follow the same pattern:
+``` bash
+nextflow run nf-core/ \
+    -profile docker \
+    --input samplesheet.csv \
+    --outdir results
+```
+
+::: fragment
+``` bash
+# Always test first with the built-in test profile
+nextflow run nf-core/ \
+    -profile test,docker \
+    --outdir results
+```
+:::
+
+::: fragment
+💡 Every nf-core pipeline has a `test` profile with small built-in data — no files needed!
+:::
+
+------------------------------------------------------------------------
+
+## What is nf-core/demo? 🧪
+
+A minimal nf-core pipeline built for **learning and testing**.
+``` bash
+# Run the demo pipeline
+nextflow run nf-core/demo \
+    -profile test,docker \
+    -r dev \
+    --outdir results
+```
+
+::: fragment
+It runs three simple steps:
+
+- `FASTQC` → quality control
+- `SEQTK_TRIM` → adapter trimming  
+- `MULTIQC` → summary report
+:::
+
+::: fragment
+💡 Perfect for understanding how a real nf-core pipeline is structured — without the complexity!
+:::
+
+::: callout-tip
+## 👉 Follow Along
+[Run a demo pipeline](https://training.nextflow.io/latest/hello_nf-core/01_run_demo/)
+:::
+
+------------------------------------------------------------------------
+
+## Reusable Building Blocks: nf-core Modules
+
+Pre-built, tested, community-maintained **process wrappers**:
+``` bash
+# Search for a module
+nf-core modules list remote | grep fastqc
+
+# Install a module into your pipeline
+nf-core modules install fastqc
+
+# Check what was added
+ls modules/nf-core/fastqc/
+```
+
+::: fragment
+Each module comes with:
+
+- ✅ Container definitions
+- ✅ Conda environment
+- ✅ Unit tests
+- ✅ Meta map for sample tracking
+:::
+
+------------------------------------------------------------------------
+
+## Your nf-core Swiss Army Knife 🔧 
+
+``` {.bash code-line-numbers="|1-2|4-5|7-8|10-11"}
+# Create a new pipeline from template
+nf-core create
+
+# Lint your pipeline for standards compliance
+nf-core lint
+
+# Launch a pipeline with interactive parameter selection
+nf-core launch nf-core/rnaseq
+
+# Download a pipeline for offline use
+nf-core download nf-core/rnaseq
+```
+
+------------------------------------------------------------------------
+
+## The nf-core Community 🌍 {.scrollable}
+
+::: fragment
+### Stay Connected
+- 💬 **Slack** — [nf-co.re/join](https://nf-co.re/join/slack)
+- 🐙 **GitHub** — [github.com/nf-core](https://github.com/nf-core)
+- 🎥 **YouTube** — Weekly Bytesize talks
+- 🦋 **Bluesky** — @nf-co.re
+- 💼 **LinkedIn** — nf-core
+:::
+
+::: fragment
+### nf-core Hackathon — March 2026 🎉
+- 📅 **March 11–13, 2026**
+- 🌐 Hybrid — in-person hubs + online
+- 🗺️ **29 local sites across 20 countries**
+- 🔬 **37 registered projects**
+
+👉 [nf-co.re/events/2026/hackathon-march-2026](https://nf-co.re/events/2026/hackathon-march-2026)
+:::
+
+::: fragment
+💡 You don't need to be an expert — every contribution counts and the community is here to help!
+:::
+
+------------------------------------------------------------------------
+
+## From Learner to Contributor
+
+```{mermaid}
+%%{init: {'theme': 'base', 'themeVariables': {'edgeLabelBackground': '#6c757d', 'tertiaryTextColor': '#f8f9fa'}}}%%
+graph LR
+    A[Find Issue] --> B[Fork Repo]
+    B --> C[Create Branch]
+    C --> D[Make Changes]
+    D --> E[nf-core lint]
+    E --> F[Open PR]
+    F --> G[Code Review]
+    
+    style A fill:#24B064,color:#fff
+    style B fill:#396E35,color:#fff
+    style C fill:#396E35,color:#fff
+    style D fill:#396E35,color:#fff
+    style E fill:#ECDC86,color:#3F2B29
+    style F fill:#24B064,color:#fff
+    style G fill:#24B064,color:#fff
+```
+
+------------------------------------------------------------------------
+
+::: fragment
+### Where to look
+- [github.com/nf-core](https://github.com/nf-core)
+- Filter by `good first issue` label
+- Check `documentation` labels
+- Browse module requests
+:::
+
+::: fragment
+### Great first contributions
+- 📝 Fix documentation typos
+- 📋 Improve parameter descriptions
+- 🧪 Add test cases
+- 🐛 Fix linting warnings
+:::
+
+------------------------------------------------------------------------
+
+## 🖥️ Your First Real Contribution 
+
+``` bash
+# 1. Fork a repo on GitHub
+
+# 2. Clone your fork
+git clone https://github.com/YOUR_USER/nf-core-REPO.git
+cd nf-core-REPO
+
+# 3. Create a branch
+git checkout -b fix/my-first-contribution
+
+# 4. Make changes, then lint
+nf-core lint
+
+# 5. Commit and push
+git add .
+git commit -m "Fix: description of change"
+git push origin fix/my-first-contribution
+
+# 6. Open a PR on GitHub!
+```
+
+------------------------------------------------------------------------
+
+## Keep These Handy {.smaller background-color="#343a40"}
+
+:::::: columns
+::: {.column width="33%"}
+### Nextflow
+
+``` bash
+nextflow run main.nf
+nextflow run main.nf -resume
+nextflow log
+nextflow clean -f
+```
+:::
+
+::: {.column width="33%"}
+### nf-core
+
+``` bash
+nf-core list
+nf-core lint
+nf-core modules list remote
+nf-core modules install <tool>
+```
+:::
+
+::: {.column width="33%"}
+### Git
+
+``` bash
+git clone <url>
+git checkout -b <branch>
+git add . && git commit -m "msg"
+git push origin <branch>
+```
+:::
+::::::
+
+------------------------------------------------------------------------
+
+## Continue Your Journey {.center background-color="#343a40"}
+
+| Resource | Link |
+|------------------------------------|------------------------------------|
+| 📚 Hello Nextflow Course | [training.nextflow.io/latest/hello_nextflow/](https://training.nextflow.io/latest/hello_nextflow/) |
+| 🚀 Getting Started | [training.nextflow.io/latest/hello_nextflow/00_orientation/](https://training.nextflow.io/latest/hello_nextflow/00_orientation/) |
+| 🏠 nf-core Website | [nf-co.re](https://nf-co.re) |
+| 💬 nf-core Slack | [nf-co.re/join](https://nf-co.re/join) |
+| 🎥 Bytesize Talks | [nf-co.re/events](https://nf-co.re/events) |
+
+------------------------------------------------------------------------
+## 🎉 You went from "What is Nextflow?" to opening a real PR!
+## Now, let's go build something amazing! 🚀
