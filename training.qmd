@@ -13,7 +13,6 @@ format:
     chalkboard: true
     preview-links: auto
     footer: "nf-core Hackathon 2026"
-    logo: "https://nf-co.re/logo/nf-core-logo.svg"
     smaller: true
     title-slide-attributes:
       data-background-color: "#212529"
@@ -21,21 +20,29 @@ format:
       text: |
         <link href="https://fonts.googleapis.com/css2?family=Maven+Pro:wght@700&family=Inter&display=swap" rel="stylesheet">
         <style>
-          .reveal, .reveal-viewport { background-color: #495057 !important; }
-          .reveal h1 { color: #24B064 !important; font-family: 'Maven Pro', sans-serif !important; font-size: 2.7em !important; }
-          .reveal h2 { color: #24B064 !important; font-family: 'Maven Pro', sans-serif !important; font-size: 2.1em !important; }
-          .reveal h3 { color: #24B064 !important; font-family: 'Maven Pro', sans-serif !important; font-size: 1.9em !important; }
-          .reveal p, .reveal li { color: #f8f9fa !important; font-family: 'Inter', sans-serif !important; }
-          .reveal a { color: #24B064 !important; }
+          .reveal, .reveal-viewport { background-color: #ffffff !important; }
+          .reveal h1 { color: #009B77 !important; font-family: 'Maven Pro', sans-serif !important; font-size: 2.7em !important; }
+          .reveal h2 { color: #00A881 !important; font-family: 'Maven Pro', sans-serif !important; font-size: 2.1em !important; }
+          .reveal h3 { color: #008264 !important; font-family: 'Maven Pro', sans-serif !important; font-size: 1.9em !important; }
+          .reveal p, .reveal li { color: #212529 !important; font-family: 'Inter', sans-serif !important; }
+          .reveal strong { color: #009B77 !important; }
+          .reveal [data-background-color="#212529"] p,
+          .reveal [data-background-color="#212529"] li { color: #f8f9fa !important; }
+          .reveal [data-background-color="#212529"] strong { color: #00A881 !important; }
+          .reveal a { color: #009B77 !important; }
           .reveal .footer { color: #adb5bd !important; }
           .reveal .slide-number { color: #adb5bd !important; }
+          .reveal table td, .reveal table th { color: #212529 !important; }
+          .reveal .callout { background-color: #FFFAED !important; border-color: #008264 !important; }
+          .reveal .callout-title { background-color: #FFF3C4 !important; color: #212529 !important; }
+          .reveal .callout-body p { color: #212529 !important; }
         </style>
 execute:
   echo: false
   eval: true
 ---
 
-## Congratulations! You Have 500 FASTQ Files 🎉
+## Let's assume ..
 
 You just got **500 FASTQ files** from the sequencing run.
 
@@ -55,10 +62,10 @@ For each sample, you need to:
 
 ------------------------------------------------------------------------
 
-## The Bash script worked .. until it didn't
+## Bash is Poweful. But ..
 
 ``` bash
-# The "it works on my machine" pipeline
+# Bash work great .. until it doesn't 
 for sample in data/*.fastq.gz; do
     fastqc $sample
     trimmomatic $sample ...
@@ -68,12 +75,13 @@ for sample in data/*.fastq.gz; do
     # What about running this on a cluster?
 done
 ```
-
 ::: {.fragment .fade-up}
-🔴 No fault tolerance\
-🔴 No parallelization\
-🔴 Not reproducible\
-🔴 Not portable
+Managing a **multi-step, multi-sample pipeline** is a different challenge:
+
+🟡 No built-in fault tolerance \
+🟡 Manual parallelization \
+🟡 Hard to reproduce \
+🟡 Not portable
 :::
 
 ------------------------------------------------------------------------
@@ -100,7 +108,7 @@ done
 
 ------------------------------------------------------------------------
 
-## Meet Nextflow {background-color="#6c757d"}
+## Meet Nextflow
 
 A workflow manager **built for bioinformatics**!
 
@@ -343,25 +351,9 @@ nextflow run hello-world.nf --input 'Bonjour le monde!'
 
 ## Two Concepts. That's All you need.
 
-```{mermaid}
-%%{init: {'theme': 'base', 'themeVariables': {'edgeLabelBackground': '#6c757d', 'tertiaryTextColor': '#f8f9fa'}}}%%
-graph LR
-    A[Channel] -->|data| B[Process]
-    B -->|data| C[Channel]
-    C -->|data| D[Process]
-    D -->|data| E[Channel]
-    
-    style A fill:#24B064,color:#f8f9fa
-    style C fill:#24B064,color:#f8f9fa
-    style E fill:#24B064,color:#f8f9fa
-    style B fill:#212529,color:#f8f9fa
-    style D fill:#212529,color:#f8f9fa
-```
-
-::::: columns
+:::::: columns
 ::: {.column width="50%"}
 ### ⚙️ Process
-
 -   A single step in your pipeline
 -   Wraps a script (Bash, Python, R, etc.)
 -   Defines inputs and outputs
@@ -369,12 +361,13 @@ graph LR
 
 ::: {.column width="50%"}
 ### 🔀 Channel
-
 -   The pipe that connects your processes
 -   Passes data between steps automatically
 -   Drives the dataflow model
 :::
-:::::
+::::::
+
+![](images/nf_img_01.png){width="70%" fig-align="center"}
 
 ------------------------------------------------------------------------
 
@@ -527,13 +520,13 @@ profiles {
 
 ------------------------------------------------------------------------
 
-## Welcome to nf-core {.center background-color="#212529"}
+# Welcome to nf-core {.center background-color="#212529"}
 
 > From writing Nextflow → joining a global community
 
 ------------------------------------------------------------------------
 
-## What is nf-core? {background-color="#212529"}
+## {background-color="#212529"}
 
 :::::: columns
 :::: {.column width="60%"}
@@ -651,7 +644,7 @@ nf-core download nf-core/rnaseq
 
 ------------------------------------------------------------------------
 
-## The nf-core Community 🌍 {.scrollable}
+## The nf-core Community 🌍
 
 ::: fragment
 ### Stay Connected
@@ -662,44 +655,26 @@ nf-core download nf-core/rnaseq
 - 💼 **LinkedIn** — nf-core
 :::
 
+------------------------------------------------------------------------
+
+## nf-core Hackathon — March 2026 🎉
+
+{{< video https://www.youtube.com/watch?v=ktn2SwKfRPs width="100%" height="500px" >}}
+
 ::: fragment
-### nf-core Hackathon — March 2026 🎉
+👉 [nf-core Hackathon 2026](https://nf-co.re/events/2026/hackathon-march-2026)
+
 - 📅 **March 11–13, 2026**
 - 🌐 Hybrid — in-person hubs + online
 - 🗺️ **29 local sites across 20 countries**
 - 🔬 **37 registered projects**
-
-👉 [nf-co.re/events/2026/hackathon-march-2026](https://nf-co.re/events/2026/hackathon-march-2026)
 :::
 
-::: fragment
-💡 You don't need to be an expert — every contribution counts and the community is here to help!
-:::
+
 
 ------------------------------------------------------------------------
 
 ## From Learner to Contributor
-
-```{mermaid}
-%%{init: {'theme': 'base', 'themeVariables': {'edgeLabelBackground': '#6c757d', 'tertiaryTextColor': '#f8f9fa'}}}%%
-graph LR
-    A[Find Issue] --> B[Fork Repo]
-    B --> C[Create Branch]
-    C --> D[Make Changes]
-    D --> E[nf-core lint]
-    E --> F[Open PR]
-    F --> G[Code Review]
-    
-    style A fill:#24B064,color:#fff
-    style B fill:#396E35,color:#fff
-    style C fill:#396E35,color:#fff
-    style D fill:#396E35,color:#fff
-    style E fill:#ECDC86,color:#3F2B29
-    style F fill:#24B064,color:#fff
-    style G fill:#24B064,color:#fff
-```
-
-------------------------------------------------------------------------
 
 ::: fragment
 ### Where to look
@@ -744,7 +719,7 @@ git push origin fix/my-first-contribution
 
 ------------------------------------------------------------------------
 
-## Keep These Handy {.smaller background-color="#343a40"}
+## Keep These Handy {.center }
 
 :::::: columns
 ::: {.column width="33%"}
@@ -783,7 +758,7 @@ git push origin <branch>
 
 ------------------------------------------------------------------------
 
-## Continue Your Journey {.center background-color="#343a40"}
+## Continue Your Journey {.center}
 
 | Resource | Link |
 |------------------------------------|------------------------------------|
@@ -794,5 +769,7 @@ git push origin <branch>
 | 🎥 Bytesize Talks | [nf-co.re/events](https://nf-co.re/events) |
 
 ------------------------------------------------------------------------
-## 🎉 You went from "What is Nextflow?" to opening a real PR!
-## Now, let's go build something amazing! 🚀
+## 🎉 You went from "What is Nextflow?" to opening a real PR! {.center}
+::: fragment
+### Now, let's go build something amazing! 🚀
+:::

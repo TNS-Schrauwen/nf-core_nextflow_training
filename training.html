@@ -9,7 +9,7 @@
 <link href="training_files/libs/quarto-html/quarto-syntax-highlighting-dark-4c7b890cc350be7067044af900615741.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
   <meta name="generator" content="quarto-1.8.25">
 
-  <meta name="dcterms.date" content="2026-03-09">
+  <meta name="dcterms.date" content="2026-03-10">
   <title>A Guide to Nextflow &amp; nf-core</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -190,19 +190,24 @@
       margin-right: 0; 
     }
   </style>
-  <script src="training_files/libs/quarto-diagram/mermaid.min.js"></script>
-  <script src="training_files/libs/quarto-diagram/mermaid-init.js"></script>
-  <link href="training_files/libs/quarto-diagram/mermaid.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Maven+Pro:wght@700&amp;family=Inter&amp;display=swap" rel="stylesheet">
   <style>
-    .reveal, .reveal-viewport { background-color: #495057 !important; }
-    .reveal h1 { color: #24B064 !important; font-family: 'Maven Pro', sans-serif !important; font-size: 2.7em !important; }
-    .reveal h2 { color: #24B064 !important; font-family: 'Maven Pro', sans-serif !important; font-size: 2.1em !important; }
-    .reveal h3 { color: #24B064 !important; font-family: 'Maven Pro', sans-serif !important; font-size: 1.9em !important; }
-    .reveal p, .reveal li { color: #f8f9fa !important; font-family: 'Inter', sans-serif !important; }
-    .reveal a { color: #24B064 !important; }
+    .reveal, .reveal-viewport { background-color: #ffffff !important; }
+    .reveal h1 { color: #009B77 !important; font-family: 'Maven Pro', sans-serif !important; font-size: 2.7em !important; }
+    .reveal h2 { color: #00A881 !important; font-family: 'Maven Pro', sans-serif !important; font-size: 2.1em !important; }
+    .reveal h3 { color: #008264 !important; font-family: 'Maven Pro', sans-serif !important; font-size: 1.9em !important; }
+    .reveal p, .reveal li { color: #212529 !important; font-family: 'Inter', sans-serif !important; }
+    .reveal strong { color: #009B77 !important; }
+    .reveal [data-background-color="#212529"] p,
+    .reveal [data-background-color="#212529"] li { color: #f8f9fa !important; }
+    .reveal [data-background-color="#212529"] strong { color: #00A881 !important; }
+    .reveal a { color: #009B77 !important; }
     .reveal .footer { color: #adb5bd !important; }
     .reveal .slide-number { color: #adb5bd !important; }
+    .reveal table td, .reveal table th { color: #212529 !important; }
+    .reveal .callout { background-color: #FFFAED !important; border-color: #008264 !important; }
+    .reveal .callout-title { background-color: #FFF3C4 !important; color: #212529 !important; }
+    .reveal .callout-body p { color: #212529 !important; }
   </style>
 </head>
 <body class="quarto-dark">
@@ -215,10 +220,10 @@
 <div class="quarto-title-authors">
 </div>
 
-  <p class="date">2026-03-09</p>
+  <p class="date">2026-03-10</p>
 </section>
-<section id="congratulations-you-have-500-fastq-files" class="slide level2 scrollable">
-<h2>Congratulations! You Have 500 FASTQ Files 🎉</h2>
+<section id="lets-assume-.." class="slide level2 scrollable">
+<h2>Let’s assume ..</h2>
 <p>You just got <strong>500 FASTQ files</strong> from the sequencing run.</p>
 <div class="fragment">
 <p>For each sample, you need to:</p>
@@ -234,9 +239,9 @@
 <p>❓Are you going to write a <strong>bash loop</strong> and hope nothing crashes halfway through?</p>
 </div>
 </section>
-<section id="the-bash-script-worked-..-until-it-didnt" class="slide level2">
-<h2>The Bash script worked .. until it didn’t</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href=""></a><span class="co"># The "it works on my machine" pipeline</span></span>
+<section id="bash-is-poweful.-but-.." class="slide level2">
+<h2>Bash is Poweful. But ..</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href=""></a><span class="co"># Bash work great .. until it doesn't </span></span>
 <span id="cb1-2"><a href=""></a><span class="cf">for</span> sample <span class="kw">in</span> data/<span class="pp">*</span>.fastq.gz<span class="kw">;</span> <span class="cf">do</span></span>
 <span id="cb1-3"><a href=""></a>    <span class="ex">fastqc</span> <span class="va">$sample</span></span>
 <span id="cb1-4"><a href=""></a>    <span class="ex">trimmomatic</span> <span class="va">$sample</span> ...</span>
@@ -246,10 +251,11 @@
 <span id="cb1-8"><a href=""></a>    <span class="co"># What about running this on a cluster?</span></span>
 <span id="cb1-9"><a href=""></a><span class="cf">done</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="fragment fade-up">
-<p>🔴 No fault tolerance<br>
-🔴 No parallelization<br>
-🔴 Not reproducible<br>
-🔴 Not portable</p>
+<p>Managing a <strong>multi-step, multi-sample pipeline</strong> is a different challenge:</p>
+<p>🟡 No built-in fault tolerance<br>
+🟡 Manual parallelization<br>
+🟡 Hard to reproduce<br>
+🟡 Not portable</p>
 </div>
 </section>
 <section id="there-has-to-be-a-better-way-.." class="slide level2">
@@ -290,7 +296,7 @@
 </tbody>
 </table>
 </section>
-<section id="meet-nextflow" class="slide level2" data-background-color="#6c757d">
+<section id="meet-nextflow" class="slide level2">
 <h2>Meet Nextflow</h2>
 <p>A workflow manager <strong>built for bioinformatics</strong>!</p>
 
@@ -544,29 +550,6 @@
 </section>
 <section id="two-concepts.-thats-all-you-need." class="slide level2">
 <h2>Two Concepts. That’s All you need.</h2>
-<div class="cell" data-reveal="true" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class=""><p></p>
-<div>
-<pre class="mermaid mermaid-js">%%{init: {'theme': 'base', 'themeVariables': {'edgeLabelBackground': '#6c757d', 'tertiaryTextColor': '#f8f9fa'}}}%%
-graph LR
-    A[Channel] --&gt;|data| B[Process]
-    B --&gt;|data| C[Channel]
-    C --&gt;|data| D[Process]
-    D --&gt;|data| E[Channel]
-    
-    style A fill:#24B064,color:#f8f9fa
-    style C fill:#24B064,color:#f8f9fa
-    style E fill:#24B064,color:#f8f9fa
-    style B fill:#212529,color:#f8f9fa
-    style D fill:#212529,color:#f8f9fa
-</pre>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
 <div class="columns">
 <div class="column" style="width:50%;">
 <h3 id="process">⚙️ Process</h3>
@@ -583,7 +566,8 @@ graph LR
 <li>Drives the dataflow model</li>
 </ul>
 </div></div>
-</section>
+
+<img data-src="images/nf_img_01.png" class="quarto-figure quarto-figure-center r-stretch" style="width:70.0%"></section>
 <section id="the-superpower-you-needed--resume" class="slide level2">
 <h2>The Superpower You Needed: <code>-resume</code> 🔄</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href=""></a><span class="co"># First run — everything executes</span></span>
@@ -754,14 +738,18 @@ graph LR
 </div>
 </div>
 </section>
-<section id="welcome-to-nf-core" class="slide level2 center" data-background-color="#212529">
-<h2>Welcome to nf-core</h2>
+<section class="slide level2">
+
+</section>
+<section>
+<section id="welcome-to-nf-core" class="title-slide slide level1 center" data-background-color="#212529">
+<h1>Welcome to nf-core</h1>
 <blockquote>
 <p>From writing Nextflow → joining a global community</p>
 </blockquote>
 </section>
-<section id="what-is-nf-core" class="slide level2" data-background-color="#212529">
-<h2>What is nf-core?</h2>
+<section id="section" class="slide level2" data-background-color="#212529">
+<h2></h2>
 <div class="columns">
 <div class="column" style="width:60%;">
 <ul>
@@ -865,7 +853,7 @@ graph LR
 <span id="cb25-10"><a href=""></a><span class="co"># Download a pipeline for offline use</span></span>
 <span id="cb25-11"><a href=""></a><span class="ex">nf-core</span> download nf-core/rnaseq</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="the-nf-core-community" class="slide level2 scrollable">
+<section id="the-nf-core-community" class="slide level2">
 <h2>The nf-core Community 🌍</h2>
 <div class="fragment">
 <h3 id="stay-connected">Stay Connected</h3>
@@ -877,52 +865,22 @@ graph LR
 <li>💼 <strong>LinkedIn</strong> — nf-core</li>
 </ul>
 </div>
+</section>
+<section id="nf-core-hackathon-march-2026" class="slide level2">
+<h2>nf-core Hackathon — March 2026 🎉</h2>
+<iframe data-external="1" src="https://www.youtube.com/embed/ktn2SwKfRPs" width="100%" height="500px" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>
 <div class="fragment">
-<h3 id="nf-core-hackathon-march-2026">nf-core Hackathon — March 2026 🎉</h3>
+<p>👉 <a href="https://nf-co.re/events/2026/hackathon-march-2026">nf-core Hackathon 2026</a></p>
 <ul>
 <li>📅 <strong>March 11–13, 2026</strong></li>
 <li>🌐 Hybrid — in-person hubs + online</li>
 <li>🗺️ <strong>29 local sites across 20 countries</strong></li>
 <li>🔬 <strong>37 registered projects</strong></li>
 </ul>
-<p>👉 <a href="https://nf-co.re/events/2026/hackathon-march-2026">nf-co.re/events/2026/hackathon-march-2026</a></p>
-</div>
-<div class="fragment">
-<p>💡 You don’t need to be an expert — every contribution counts and the community is here to help!</p>
 </div>
 </section>
 <section id="from-learner-to-contributor" class="slide level2">
 <h2>From Learner to Contributor</h2>
-<div class="cell" data-reveal="true" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class=""><p></p>
-<div>
-<pre class="mermaid mermaid-js">%%{init: {'theme': 'base', 'themeVariables': {'edgeLabelBackground': '#6c757d', 'tertiaryTextColor': '#f8f9fa'}}}%%
-graph LR
-    A[Find Issue] --&gt; B[Fork Repo]
-    B --&gt; C[Create Branch]
-    C --&gt; D[Make Changes]
-    D --&gt; E[nf-core lint]
-    E --&gt; F[Open PR]
-    F --&gt; G[Code Review]
-    
-    style A fill:#24B064,color:#fff
-    style B fill:#396E35,color:#fff
-    style C fill:#396E35,color:#fff
-    style D fill:#396E35,color:#fff
-    style E fill:#ECDC86,color:#3F2B29
-    style F fill:#24B064,color:#fff
-    style G fill:#24B064,color:#fff
-</pre>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
-</section>
-<section class="slide level2">
-
 <div class="fragment">
 <h3 id="where-to-look">Where to look</h3>
 <ul>
@@ -963,7 +921,7 @@ graph LR
 <span id="cb26-17"><a href=""></a></span>
 <span id="cb26-18"><a href=""></a><span class="co"># 6. Open a PR on GitHub!</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="keep-these-handy" class="slide level2 smaller" data-background-color="#343a40">
+<section id="keep-these-handy" class="slide level2 center">
 <h2>Keep These Handy</h2>
 <div class="columns">
 <div class="column" style="width:33%;">
@@ -986,7 +944,7 @@ graph LR
 <span id="cb29-4"><a href=""></a><span class="fu">git</span> push origin <span class="op">&lt;</span>branch<span class="op">&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div></div>
 </section>
-<section id="continue-your-journey" class="slide level2 center" data-background-color="#343a40">
+<section id="continue-your-journey" class="slide level2 center">
 <h2>Continue Your Journey</h2>
 <table class="caption-top">
 <thead>
@@ -1019,16 +977,15 @@ graph LR
 </tbody>
 </table>
 </section>
-<section id="you-went-from-what-is-nextflow-to-opening-a-real-pr" class="slide level2">
+<section id="you-went-from-what-is-nextflow-to-opening-a-real-pr" class="slide level2 center">
 <h2>🎉 You went from “What is Nextflow?” to opening a real PR!</h2>
-</section>
-<section id="now-lets-go-build-something-amazing" class="slide level2">
-<h2>Now, let’s go build something amazing! 🚀</h2>
+<div class="fragment">
+<h3 id="now-lets-go-build-something-amazing">Now, let’s go build something amazing! 🚀</h3>
+</div>
 
-</section>
+</section></section>
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
-<p><img src="https://nf-co.re/logo/nf-core-logo.svg" class="slide-logo"></p>
 <div class="footer footer-default">
 <p>nf-core Hackathon 2026</p>
 </div>
