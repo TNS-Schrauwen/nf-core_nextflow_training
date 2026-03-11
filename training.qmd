@@ -520,8 +520,7 @@ profiles {
 
 ------------------------------------------------------------------------
 
-# Welcome to nf-core {.center background-color="#212529"}
-
+## Welcome to nf-core {.center background-color="#212529"}
 > From writing Nextflow → joining a global community
 
 ------------------------------------------------------------------------
