@@ -521,7 +521,6 @@ profiles {
 ------------------------------------------------------------------------
 
 ## Welcome to nf-core {.center background-color="#212529"}
-> From writing Nextflow → joining a global community
 
 ------------------------------------------------------------------------
 
@@ -530,11 +529,11 @@ profiles {
 :::::: columns
 :::: {.column width="60%"}
 ::: incremental
--   🏠 A **community** of pipeline developers
--   📦 **90+ curated pipelines** (RNA-seq, ATAC-seq, sarek...)
+-   🏠 A **global community** collaborating to build open-source *Nextflow* components and pipelines
+-   📦 **90+ curated pipelines**
 -   🧱 **1200+ reusable modules**
--   🛠️ **CLI tools** for building & testing
--   📋 **Standards** for quality and reproducibility
+-   🛠️ Dedicated **CLI tools** to create, test, and maintain pipelines
+-   📋 **Shared standards** for quality and reproducibility
 :::
 ::::
 
